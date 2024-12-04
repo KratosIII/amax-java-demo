@@ -1,30 +1,68 @@
+import io.eblock.eos4j.Ecc;
+import io.eblock.eos4j.Rpc;
+import io.eblock.eos4j.api.vo.Block;
+import io.eblock.eos4j.api.vo.ChainInfo;
+import io.eblock.eos4j.api.vo.transaction.Transaction;
+import io.eblock.eos4j.api.vo.transaction.push.Tx;
+import io.eblock.eos4j.api.vo.transaction.push.TxAction;
+import io.eblock.eos4j.api.vo.transaction.push.TxSign;
+import io.eblock.eos4j.ese.Action;
+import io.eblock.eos4j.ese.DataParam;
+import io.eblock.eos4j.ese.DataType;
 
-public class AmaxJavaDemo {
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class TransferToken {
+
+
     public static void main(String[] args) throws Exception {
 
-        ChainInfo info = mgpBlockInfo().getInfo();
-        Tx tx = mgpBlockInfo().getTx();
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        String pk = "your private key";
+
+        Rpc rpc = new Rpc("https://test-chain.ambt.art"); // 测试节点url
+
+        String from = "amaxdemouser"; // 转出账号
+        String to = "testuser1";// 转入账号
+        String quantity = "0.10000000 AMAX";
+        String memo = "";
+
+        ChainInfo info = rpc.getChainInfo();
+
+        Tx tx = new Tx();
+        Block block = rpc.getBlock(info.getLastIrreversibleBlockNum().toString());
+
+        tx.setExpiration(info.getHeadBlockTime().getTime() / 1000L + 60L);
+        tx.setRef_block_num(info.getLastIrreversibleBlockNum());
+        tx.setRef_block_prefix(block.getRefBlockPrefix());
+        tx.setNet_usage_words(0L);
+        tx.setMax_cpu_usage_ms(0L);
+        tx.setDelay_sec(0L);
+
         List<TxAction> actions = new ArrayList();
         tx.setActions(actions);
         Map<String, Object> map = new LinkedHashMap();
-        map.put("from", "public key"); //public key
-        map.put("to", "apl******"); // amc account
-        map.put("quantity", new DataParam(quantity, DataType.asset, Action.transfer).getValue());
+        map.put("from", from);
+        map.put("to", to);
+        map.put("quantity", new DataParam(quantity, DataType.asset, Action.transfer).getValue()); // 数量
         map.put("memo", memo);
-        TxAction setBindAction = new TxAction(from, "amax.mtoken", "tranfer", map);
-        actions.add(setBindAction);
 
-        String sign = Ecc.signTransaction("${private key}", new TxSign(info.getChainId(), tx));
+        String contract = "amax.token";
+        String actionName = "transfer";
 
-        String data = Ecc.parseParamsData(
-                new DataParam(from, DataType.name, Action.transfer),
-                new DataParam(contractConfig.getXdaoClaim(), DataType.name, Action.transfer),
-                new DataParam(quantity, DataType.asset, Action.transfer),
-                new DataParam(memo, DataType.string, Action.transfer));
-        setBindAction.setData(data);
+        TxAction transferAction = new TxAction(from, contract, actionName, map);
+        actions.add(transferAction);
 
-        tx.setExpiration(this.dateFormatter.format(new Date(1000L * Long.parseLong(tx.getExpiration().toString()))));
-        return pushTrx(tx, sign);
+        String sign = Ecc.signTransaction(pk, new TxSign(info.getChainId(), tx));
 
+        String data = Ecc.parseTransferData(from, to, quantity, memo);
+        transferAction.setData(data);
+        tx.setExpiration(dateFormatter.format(new Date(1000L * Long.parseLong(tx.getExpiration().toString()))));
+        Transaction transaction = rpc.pushTransaction("none", tx, new String[]{sign});
+
+        System.out.println(transaction.getTransactionId());
     }
 }
