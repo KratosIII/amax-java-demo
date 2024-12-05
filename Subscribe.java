@@ -22,7 +22,7 @@ public class Subscribe {
     public static void main(String[] args) throws Exception {
 
         Rpc rpc = new Rpc("https://test-chain.ambt.art"); // 测试节点url
-        String pk = "5HqNwwsqth1ULSVf8EASvEfWg8bsASPT1KpkY8HiQuy6MzuUVDn";
+        String pk = "private key";
         try {
             Transaction subscribeT = rpc.subscribe(pk,
                     "amax2booster",
