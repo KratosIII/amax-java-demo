@@ -1,6 +1,7 @@
 import io.eblock.eos4j.Ecc;
 import io.eblock.eos4j.Rpc;
 import io.eblock.eos4j.api.exception.ApiException;
+import io.eblock.eos4j.api.exception.ErrorDetails;
 import io.eblock.eos4j.api.vo.Block;
 import io.eblock.eos4j.api.vo.ChainInfo;
 import io.eblock.eos4j.api.vo.transaction.Transaction;
@@ -29,21 +30,16 @@ public class Subscribe {
                     "idoadmin",
                     "usera",
                     "0",
-                    "idoadmin",
-                    "10.00000000 AMAX",
-                    "amax.token",
-                    "2.00000000 AMAE",
-                    "amae.token",
+                    "100.00000000 MUSE",
+                    "muse.token",
                     "admin"
             );
-            System.out.println(subscribeT.getTransactionId());
-
-
-            Transaction transaction = rpc.thirdUnlock(pk, "amax2custody", "idoadmin", "0", "1", "admin", "");
-            System.out.println(transaction.getTransactionId());
+            System.out.println("交易hash：" + subscribeT.getTransactionId());
         } catch (ApiException e) {
-            e.printStackTrace();
-            System.out.println(e.getError().getError().getWhat());
+            System.err.println(e.getError().getError().getWhat());
+            for (ErrorDetails detail : e.getError().getError().getDetails()) {
+                System.err.println(detail.getMessage());
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
